@@ -5,18 +5,25 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  Pressable
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {
-  getMessages, 
+  getMessages,
   createMessage, 
   updateMessage,
   deleteMessage,
 } from '../services/messageApi';
 
+import {
+    createChat,
+    getChats,
+} from '../services/chatApi';
+
 import ChatHeader from '../components/ChatHeader';
+import ChatDrawer from '../components/ChatDrawer';
 import ChatBubble from '../components/ChatBubble';
 import MessageInput from '../components/MessageInput';
 // import TypingIndicator from '../components/TypingIndicator';
@@ -25,6 +32,7 @@ import MessageInput from '../components/MessageInput';
 import Clipboard from '@react-native-clipboard/clipboard';
 
 import {Message} from '../types/message';
+import {Chat} from '../types/chat';
 import {useTheme} from '../theme/theme';
 
 const ChatScreen = () => {
@@ -44,17 +52,46 @@ const ChatScreen = () => {
   // ]);
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chatId, setChatId] = useState('');
+  const [chats, setChats] = useState<Chat[]>([]);
   const [selectedMessage, setSelectedMessage] =
     useState<Message | null>(null);
 
- useEffect(() => {
-  loadMessages();
+  const [drawerVisible, setDrawerVisible] =
+useState(false);
+
+useEffect(() => {
+  initializeChat();
+  loadChats();
+
 }, []);
 
-const loadMessages = async () => {
+const initializeChat = async () => {
   try {
-    const data = await getMessages();
+    const chat = await createChat();
+
+    console.log('Created Chat:', chat);
+
+    setChatId(chat._id);
+
+    await loadMessages(chat._id);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const loadChats = async () => {
+    const chats = await getChats();
+
+    console.log(chats);
+    setChats(chats);
+};
+
+const loadMessages = async (chatId: string) => {
+  try {
+    const data = await getMessages(chatId);
+
     console.log('Fetched messages:', data);
+
     setMessages(data);
   } catch (error) {
     console.log(error);
@@ -69,11 +106,11 @@ const testDelete = async () => {
       return;
     }
 
-    const response = await deleteMessage(firstMessage.id);
+    const response = await deleteMessage(firstMessage._id);
 
     console.log(response);
 
-    await loadMessages();
+    await loadMessages(chatId);
   } catch (error) {
     console.log(error);
   }
@@ -88,11 +125,23 @@ const testUpdate = async () => {
 
     console.log('Updated message:', updatedMessage);
 
-    await loadMessages();
+    await loadMessages(chatId);
   } catch (error) {
     console.log(error);
   }
 };
+
+const openChat = async (chatId: string) => {
+
+    setChatId(chatId);
+
+    const data = await getMessages(chatId);
+
+    setMessages(data);
+
+    setDrawerVisible(false);
+};
+
 
 const handleEdit = () => {
   Alert.alert(
@@ -112,9 +161,9 @@ const handleDelete = async () => {
         return;
     }
 
-    await deleteMessage(selectedMessage.id);
+    await deleteMessage(selectedMessage._id);
 
-    await loadMessages();
+    await loadMessages(chatId);
 
     setSelectedMessage(null);
 };
@@ -143,7 +192,7 @@ const handleCopy = () => {
     // setMessages(prev => [...prev, userMessage]);
 
     try {
-  const newMessage = await createMessage(text, 'user');
+  const newMessage = await createMessage(chatId, text, 'user');
   console.log('Created message:', newMessage);
 
   setMessages(prev => [...prev, newMessage]);
@@ -155,11 +204,12 @@ const handleCopy = () => {
 
     setTimeout(() => {
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'This is an AI reply.',
-        sender: 'assistant',
-        createdAt: new Date(),
-      };
+  _id: Date.now().toString(),
+  chatId,
+  text: 'This is an AI reply.',
+  sender: 'assistant',
+  createdAt: new Date().toISOString(),
+};
 
       setMessages(prev => [...prev, aiMessage]);
       setTyping(false);
@@ -178,17 +228,33 @@ const handleCopy = () => {
           },
         ]}>
         <ChatHeader
+        onMenuPress={() => setDrawerVisible(true)}
   selectedMessage={selectedMessage !== null}
   onCopy={handleCopy}
   onEdit={handleEdit}
   onDelete={handleDelete}
   onCancel={handleCancel}
 />
+{drawerVisible && (
+  <Pressable
+    style={styles.overlay}
+    onPress={() => setDrawerVisible(false)}
+  />
+)}  
+
+{drawerVisible && (
+  
+   <ChatDrawer
+  chats={chats}
+  onSelect={openChat}
+  onNewChat={initializeChat}
+/>
+)}
 
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item._id}
           renderItem={({item}) => <ChatBubble 
             message={item}
             onLongPress={setSelectedMessage}
@@ -228,4 +294,13 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
   },
+  overlay: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.45)',
+  zIndex: 90,
+},
 });

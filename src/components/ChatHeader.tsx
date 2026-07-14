@@ -16,6 +16,7 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onCancel: () => void;
+  onMenuPress: () => void;
 }
 
 const ChatHeader = ({
@@ -24,13 +25,19 @@ const ChatHeader = ({
   onEdit,
   onDelete,
   onCancel,
+  onMenuPress,
 }: Props) => {
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <View style={styles.iconContainer}>
+        {/* <View style={styles.iconContainer}> */}
+        <Pressable 
+          style={styles.iconContainer}
+          onPress={onMenuPress}
+          >
           <Icon name="sparkles" size={22} color="#FFFFFF" />
-        </View>
+          </Pressable>
+        {/* </View> */}
 
         <View>
           <Text style={styles.title}>AI Assistant</Text>

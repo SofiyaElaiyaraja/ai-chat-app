@@ -1,6 +1,7 @@
 export interface Message {
-  id: string;
+  _id: string;
+  chatId: string;
   text: string;
   sender: 'user' | 'assistant';
-  createdAt: Date;
+  createdAt: string;
 }
