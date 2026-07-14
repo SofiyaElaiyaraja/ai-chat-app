@@ -6,8 +6,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import {Colors} from '../theme/colors';
+
 import {Spacing} from '../theme/spacing';
+import {useTheme} from '../theme/theme';
 
 interface Props {
   onSend: (message: string) => void;
@@ -15,6 +16,7 @@ interface Props {
 
 const MessageInput = ({onSend}: Props) => {
   const [text, setText] = useState('');
+  const theme = useTheme();
 
   const handleSend = () => {
     const value = text.trim();
@@ -28,26 +30,44 @@ const MessageInput = ({onSend}: Props) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+        },
+      ]}>
       <TouchableOpacity style={styles.iconButton}>
         <Ionicons
           name="add"
           size={24}
-          color={Colors.subText}
+          color={theme.subText}
         />
       </TouchableOpacity>
 
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: theme.input,
+            color: theme.text,
+          },
+        ]}
         placeholder="Ask me anything..."
-        placeholderTextColor={Colors.subText}
+        placeholderTextColor={theme.subText}
         value={text}
         onChangeText={setText}
         multiline
       />
 
       <TouchableOpacity
-        style={styles.sendButton}
+        style={[
+          styles.sendButton,
+          {
+            backgroundColor: theme.primary,
+          },
+        ]}
         onPress={handleSend}>
         <Ionicons
           name="arrow-up"
@@ -66,9 +86,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
 
   iconButton: {
@@ -78,11 +96,9 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    backgroundColor: Colors.input,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: Colors.text,
     maxHeight: 120,
   },
 
@@ -90,7 +106,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,

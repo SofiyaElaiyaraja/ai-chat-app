@@ -1,10 +1,30 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {
+    View, 
+    Text, 
+    StyleSheet,
+    Pressable,
+  } from 'react-native';
 import Icon from '@react-native-vector-icons/ionicons';
 import {Colors} from '../theme/colors';
 import {Spacing} from '../theme/spacing';
 
-const ChatHeader = () => {
+
+interface Props {
+  selectedMessage: boolean;
+  onCopy: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onCancel: () => void;
+}
+
+const ChatHeader = ({
+  selectedMessage,
+  onCopy,
+  onEdit,
+  onDelete,
+  onCancel,
+}: Props) => {
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
@@ -18,10 +38,30 @@ const ChatHeader = () => {
         </View>
       </View>
 
-      <View style={styles.status}>
-        <View style={styles.onlineDot} />
-        <Text style={styles.onlineText}>Online</Text>
-      </View>
+      {!selectedMessage ? (
+  <View style={styles.status}>
+    <View style={styles.onlineDot} />
+    <Text style={styles.onlineText}>Online</Text>
+  </View>
+) : (
+  <View style={styles.actions}>
+    <Pressable onPress={onCopy}>
+      <Icon name="copy-outline" size={24} color={Colors.text} />
+    </Pressable>
+
+    <Pressable onPress={onEdit}>
+      <Icon name="create-outline" size={24} color={Colors.text} />
+    </Pressable>
+
+    <Pressable onPress={onDelete}>
+      <Icon name="trash-outline" size={24} color="#EF4444" />
+    </Pressable>
+
+    <Pressable onPress={onCancel}>
+      <Icon name="close" size={24} color={Colors.text} />
+    </Pressable>
+  </View>
+)}
     </View>
   );
 };
@@ -83,4 +123,9 @@ const styles = StyleSheet.create({
     color: Colors.subText,
     fontWeight: '600',
   },
+  actions: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 18,
+},
 });
